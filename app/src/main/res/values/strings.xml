@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Audi Options Decoder</string>
+    <string name="img_captured_photo_description">Captured photo</string>
+    <string name="btn_open_camera_text">Open camera</string>
 </resources>
