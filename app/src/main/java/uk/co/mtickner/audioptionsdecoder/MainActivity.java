@@ -3,10 +3,12 @@ package uk.co.mtickner.audioptionsdecoder;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 
 import java.io.File;
 
@@ -18,12 +20,25 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int TAKE_PICTURE = 2;
 
+    protected ImageView imgCapturedPhoto;
+
     private String tempImagePath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        String dataDirectory = Environment.getExternalStorageDirectory() + "/Android/data/uk.co.mtickner.audioptionsdecoder";
+        String tempDirectory = dataDirectory + "/temp";
+
+        tempImagePath = tempDirectory + "/temp.jpg";
+
+        // TODO Check for success
+        File tempDir = new File(tempDirectory);
+        if (!tempDir.isDirectory()) {
+            tempDir.mkdirs();
+        }
     }
 
     public void openCameraHandler(View view) {
