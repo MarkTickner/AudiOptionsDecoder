@@ -1,11 +1,9 @@
 package uk.co.mtickner.audioptionsdecoder;
 
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -22,6 +20,7 @@ import static android.content.pm.PackageManager.PERMISSION_DENIED;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
 import static java.lang.String.format;
+import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.getAppTempDirectory;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,17 +39,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 //        imgCapturedPhoto = (ImageView) findViewById(R.id.img_captured_photo);
-        String dataDirectory = Environment.getExternalStorageDirectory() +
-                "/Android/data/uk.co.mtickner.audioptionsdecoder";
-        String tempDirectory = dataDirectory + "/temp";
-
-        tempImagePath = tempDirectory + "/temp.jpg";
-
-        // TODO Check for success
-        File tempDir = new File(tempDirectory);
-        if (!tempDir.isDirectory()) {
-            tempDir.mkdirs();
-        }
     }
 
     @Override
@@ -68,12 +56,7 @@ public class MainActivity extends AppCompatActivity {
                 new AlertDialog.Builder(MainActivity.this)
                         .setMessage("Permissions required to use this feature were denied, " +
                                 "allow them to continue.")
-                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-
-                                //ActivityCompat.requestPermissions(activity, new String[]{permission, permission}, requestCode);
-                            }
-                        })
+                        .setPositiveButton("OK", null)
                         .create()
                         .show();
             }
@@ -84,8 +67,16 @@ public class MainActivity extends AppCompatActivity {
         openCamera();
     }
 
+    private void initialiseDirectory() {
+        File appTempDirectory = new File(getAppTempDirectory());
+        if (!appTempDirectory.isDirectory()) {
+            appTempDirectory.mkdirs();
+        }
+    }
+
     private void openCamera() {
         if (PermissionsUtil.isPermissionGranted(MainActivity.this, WRITE_EXTERNAL_STORAGE)) {
+            initialiseDirectory();
             startCameraActivity();
         } else {
             PermissionsUtil.requestPermission(
