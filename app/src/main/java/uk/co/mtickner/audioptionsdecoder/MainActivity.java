@@ -1,5 +1,7 @@
 package uk.co.mtickner.audioptionsdecoder;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -16,6 +18,8 @@ import java.io.File;
 import uk.co.mtickner.audioptionsdecoder.utils.PermissionsUtil;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
+import static android.content.pm.PackageManager.PERMISSION_DENIED;
+import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
 import static java.lang.String.format;
 
@@ -23,7 +27,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
 
-    private static final int PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE_CODE = 0;
+    private static final int WRITE_EXTERNAL_STORAGE_REQUEST_CODE = 0;
     private static final int TAKE_PICTURE = 2;
 
     protected ImageView imgCapturedPhoto;
@@ -36,12 +40,11 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
 //        imgCapturedPhoto = (ImageView) findViewById(R.id.img_captured_photo);
-        String dataDirectory = Environment.getExternalStorageDirectory() + "/Android/data/uk.co.mtickner.audioptionsdecoder";
+        String dataDirectory = Environment.getExternalStorageDirectory() +
+                "/Android/data/uk.co.mtickner.audioptionsdecoder";
         String tempDirectory = dataDirectory + "/temp";
 
         tempImagePath = tempDirectory + "/temp.jpg";
-
-        PermissionsUtil.requestPermission(MainActivity.this, WRITE_EXTERNAL_STORAGE, PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE_CODE);
 
         // TODO Check for success
         File tempDir = new File(tempDirectory);
@@ -53,10 +56,43 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
+
+        if (requestCode == WRITE_EXTERNAL_STORAGE_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PERMISSION_GRANTED) {
+                Log.i(TAG, format("Permission: %s granted", WRITE_EXTERNAL_STORAGE));
+
+                openCamera();
+            } else if (grantResults[0] == PERMISSION_DENIED) {
+                Log.i(TAG, format("Permission: %s denied", WRITE_EXTERNAL_STORAGE));
+
+                new AlertDialog.Builder(MainActivity.this)
+                        .setMessage("Permissions required to use this feature were denied, " +
+                                "allow them to continue.")
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+
+                                //ActivityCompat.requestPermissions(activity, new String[]{permission, permission}, requestCode);
+                            }
+                        })
+                        .create()
+                        .show();
+            }
+        }
     }
 
     public void openCameraHandler(View view) {
-        startCameraActivity();
+        openCamera();
+    }
+
+    private void openCamera() {
+        if (PermissionsUtil.isPermissionGranted(MainActivity.this, WRITE_EXTERNAL_STORAGE)) {
+            startCameraActivity();
+        } else {
+            PermissionsUtil.requestPermission(
+                    MainActivity.this,
+                    WRITE_EXTERNAL_STORAGE,
+                    WRITE_EXTERNAL_STORAGE_REQUEST_CODE);
+        }
     }
 
     private void startCameraActivity() {
