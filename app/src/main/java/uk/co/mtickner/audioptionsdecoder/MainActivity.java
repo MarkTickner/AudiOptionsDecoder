@@ -2,6 +2,8 @@ package uk.co.mtickner.audioptionsdecoder;
 
 import android.app.AlertDialog;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -21,6 +23,7 @@ import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
 import static java.lang.String.format;
 import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.getAppTempDirectory;
+import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.getTempImagePath;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -31,14 +34,14 @@ public class MainActivity extends AppCompatActivity {
 
     protected ImageView imgCapturedPhoto;
 
-    private String tempImagePath;
+    private boolean photoTaken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        imgCapturedPhoto = (ImageView) findViewById(R.id.img_captured_photo);
+        imgCapturedPhoto = (ImageView) findViewById(R.id.img_captured_photo);
     }
 
     @Override
@@ -87,8 +90,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startCameraActivity() {
-        File file = new File(tempImagePath);
-        Uri outputFileUri = Uri.fromFile(file);
+        File tempImageFile = new File(getTempImagePath());
+        Uri outputFileUri = Uri.fromFile(tempImageFile);
 
         Intent intent = new Intent(ACTION_IMAGE_CAPTURE);
         intent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
@@ -109,6 +112,14 @@ public class MainActivity extends AppCompatActivity {
                 case RESULT_OK:
                     // TODO Photo taken
                     Log.i(TAG, "Photo taken");
+
+                    photoTaken = true;
+
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inSampleSize = 4;
+
+                    Bitmap bitmap = BitmapFactory.decodeFile(getTempImagePath(), options);
+                    imgCapturedPhoto.setImageBitmap(bitmap);
                     break;
             }
         }
