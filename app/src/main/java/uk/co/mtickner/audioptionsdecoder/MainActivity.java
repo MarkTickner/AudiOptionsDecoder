@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int WRITE_EXTERNAL_STORAGE_REQUEST_CODE = 0;
     private static final int TAKE_PICTURE = 2;
+    private static final String PHOTO_TAKEN = "photo_taken";
 
     protected ImageView imgCapturedPhoto;
 
@@ -100,6 +101,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(PHOTO_TAKEN, photoTaken);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        if (savedInstanceState.getBoolean(PHOTO_TAKEN)) {
+            onPhotoTaken();
+        }
+    }
+
+    protected void onPhotoTaken() {
+        photoTaken = true;
+
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 4;
+
+        Bitmap bitmap = BitmapFactory.decodeFile(getTempImagePath(), options);
+        imgCapturedPhoto.setImageBitmap(bitmap);
+    }
+
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -110,16 +133,10 @@ public class MainActivity extends AppCompatActivity {
                     break;
 
                 case RESULT_OK:
-                    // TODO Photo taken
                     Log.i(TAG, "Photo taken");
 
-                    photoTaken = true;
+                    onPhotoTaken();
 
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inSampleSize = 4;
-
-                    Bitmap bitmap = BitmapFactory.decodeFile(getTempImagePath(), options);
-                    imgCapturedPhoto.setImageBitmap(bitmap);
                     break;
             }
         }
