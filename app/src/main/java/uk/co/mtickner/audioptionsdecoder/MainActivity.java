@@ -13,17 +13,22 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 
-import java.io.File;
 
-import uk.co.mtickner.audioptionsdecoder.utils.PermissionsUtil;
+import java.io.File;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static android.content.pm.PackageManager.PERMISSION_DENIED;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static android.provider.MediaStore.ACTION_IMAGE_CAPTURE;
 import static java.lang.String.format;
-import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.getAppTempDirectory;
-import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.getTempImagePath;
+import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.appTempDirectory;
+import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.copyFromAssets;
+import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.createDirectory;
+import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.appDataDirectory;
+import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.tempImagePath;
+import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.tessDirectory;
+import static uk.co.mtickner.audioptionsdecoder.utils.PermissionsUtil.isPermissionGranted;
+import static uk.co.mtickner.audioptionsdecoder.utils.PermissionsUtil.requestPermission;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,10 +37,9 @@ public class MainActivity extends AppCompatActivity {
     private static final int WRITE_EXTERNAL_STORAGE_REQUEST_CODE = 0;
     private static final int TAKE_PICTURE = 2;
     private static final String PHOTO_TAKEN = "photo_taken";
+    private boolean photoTaken;
 
     protected ImageView imgCapturedPhoto;
-
-    private boolean photoTaken;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +47,18 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         imgCapturedPhoto = (ImageView) findViewById(R.id.img_captured_photo);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(PHOTO_TAKEN, photoTaken);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        if (savedInstanceState.getBoolean(PHOTO_TAKEN)) {
+            onPhotoTaken();
+        }
     }
 
     @Override
@@ -71,19 +87,12 @@ public class MainActivity extends AppCompatActivity {
         openCamera();
     }
 
-    private void initialiseDirectory() {
-        File appTempDirectory = new File(getAppTempDirectory());
-        if (!appTempDirectory.isDirectory()) {
-            appTempDirectory.mkdirs();
-        }
-    }
-
     private void openCamera() {
-        if (PermissionsUtil.isPermissionGranted(MainActivity.this, WRITE_EXTERNAL_STORAGE)) {
-            initialiseDirectory();
+        if (isPermissionGranted(MainActivity.this, WRITE_EXTERNAL_STORAGE)) {
+            createDirectory(appTempDirectory());
             startCameraActivity();
         } else {
-            PermissionsUtil.requestPermission(
+            requestPermission(
                     MainActivity.this,
                     WRITE_EXTERNAL_STORAGE,
                     WRITE_EXTERNAL_STORAGE_REQUEST_CODE);
@@ -91,7 +100,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startCameraActivity() {
-        File tempImageFile = new File(getTempImagePath());
+        File tempImageFile = new File(tempImagePath());
         Uri outputFileUri = Uri.fromFile(tempImageFile);
 
         Intent intent = new Intent(ACTION_IMAGE_CAPTURE);
@@ -100,26 +109,18 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(intent, TAKE_PICTURE);
     }
 
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        outState.putBoolean(PHOTO_TAKEN, photoTaken);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        if (savedInstanceState.getBoolean(PHOTO_TAKEN)) {
-            onPhotoTaken();
-        }
-    }
-
     protected void onPhotoTaken() {
         photoTaken = true;
 
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = 4;
 
-        Bitmap bitmap = BitmapFactory.decodeFile(getTempImagePath(), options);
+        Bitmap bitmap = BitmapFactory.decodeFile(tempImagePath(), options);
         imgCapturedPhoto.setImageBitmap(bitmap);
+        process(bitmap);
+    }
+
+    private void process(Bitmap bitmap) {
     }
 
     @Override
