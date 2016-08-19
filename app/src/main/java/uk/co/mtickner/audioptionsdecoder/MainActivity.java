@@ -86,6 +86,26 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == TAKE_PICTURE) {
+            switch (resultCode) {
+                case RESULT_CANCELED:
+                    Log.i(TAG, "User cancelled camera activity");
+                    break;
+
+                case RESULT_OK:
+                    Log.i(TAG, "Photo taken");
+
+                    onPhotoTaken();
+
+                    break;
+            }
+        }
+    }
+
     public void openCameraHandler(View view) {
         openCamera();
     }
@@ -149,26 +169,6 @@ public class MainActivity extends AppCompatActivity {
         } catch (IOException e) {
             Log.e(TAG, format("Error copying: %s from assets to: %s\n%s",
                     assetFileName, destinationDirectory, e.toString()));
-        }
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == TAKE_PICTURE) {
-            switch (resultCode) {
-                case RESULT_CANCELED:
-                    Log.i(TAG, "User cancelled camera activity");
-                    break;
-
-                case RESULT_OK:
-                    Log.i(TAG, "Photo taken");
-
-                    onPhotoTaken();
-
-                    break;
-            }
         }
     }
 
