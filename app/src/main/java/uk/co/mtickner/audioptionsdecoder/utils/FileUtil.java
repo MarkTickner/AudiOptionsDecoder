@@ -65,18 +65,22 @@ public class FileUtil {
         AssetManager assetManager = context.getAssets();
         File destinationFile = new File(destinationDirectory + "/" + assetFileName);
 
-        InputStream in = assetManager.open(assetFileName);
-        OutputStream out = new FileOutputStream(destinationFile);
+        if (!destinationFile.exists()) {
+            InputStream in = assetManager.open(assetFileName);
+            OutputStream out = new FileOutputStream(destinationFile);
 
-        byte[] buffer = new byte[1024];
-        int read;
-        while ((read = in.read(buffer)) != -1) {
-            out.write(buffer, 0, read);
+            byte[] buffer = new byte[1024];
+            int read;
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
+            }
+            in.close();
+            out.close();
+
+            Log.i(TAG, format("Asset: %s was copied to: %s", assetFileName, destinationDirectory));
+        } else {
+            Log.i(TAG, format("Asset: %s already exists", assetFileName));
         }
-        in.close();
-        out.close();
-
-        Log.i(TAG, format("Asset: %s was copied to: %s", assetFileName, destinationDirectory));
     }
 
 }
