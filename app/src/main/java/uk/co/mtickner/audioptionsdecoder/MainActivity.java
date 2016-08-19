@@ -12,9 +12,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 
 import java.io.File;
+import java.io.IOException;
+
+import uk.co.mtickner.audioptionsdecoder.utils.FileUtil;
 
 import static android.Manifest.permission.WRITE_EXTERNAL_STORAGE;
 import static android.content.pm.PackageManager.PERMISSION_DENIED;
@@ -24,7 +28,6 @@ import static java.lang.String.format;
 import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.appTempDirectory;
 import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.copyFromAssets;
 import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.createDirectory;
-import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.appDataDirectory;
 import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.tempImagePath;
 import static uk.co.mtickner.audioptionsdecoder.utils.FileUtil.tessDirectory;
 import static uk.co.mtickner.audioptionsdecoder.utils.PermissionsUtil.isPermissionGranted;
@@ -117,10 +120,36 @@ public class MainActivity extends AppCompatActivity {
 
         Bitmap bitmap = BitmapFactory.decodeFile(tempImagePath(), options);
         imgCapturedPhoto.setImageBitmap(bitmap);
-        process(bitmap);
+
+        processPhoto(bitmap);
     }
 
-    private void process(Bitmap bitmap) {
+    private void processPhoto(Bitmap bitmap) {
+        try {
+            photoOCR(bitmap);
+        } catch (IOException e) {
+        }
+    }
+
+    private void photoOCR(Bitmap bitmap) {
+        String assetFileName = "eng.traineddata";
+        String destinationDirectory = tessDirectory();
+
+        try {
+            copyFromAssets(MainActivity.this, assetFileName, destinationDirectory);
+
+            TessBaseAPI baseApi = new TessBaseAPI();
+            baseApi.init(FileUtil.appDataDirectory() + "/", "eng");
+            baseApi.setImage(bitmap);
+            String recognisedText = baseApi.getUTF8Text();
+            baseApi.end();
+
+            Log.e(TAG, recognisedText);
+            Toast.makeText(this, recognisedText, Toast.LENGTH_LONG).show();
+        } catch (IOException e) {
+            Log.e(TAG, format("Error copying: %s from assets to: %s\n%s",
+                    assetFileName, destinationDirectory, e.toString()));
+        }
     }
 
     @Override
